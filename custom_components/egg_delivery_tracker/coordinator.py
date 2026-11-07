@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import uuid
+import logging
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
@@ -11,9 +12,12 @@ from .const import (
     CONF_AUTO_CONFIRM, CONF_AUTO_CONFIRM_TIME, DEFAULTS,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+
 class EggDeliveryCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, entry, store, saved):
-        super().__init__(hass, None, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
         self.entry = entry
         self.store = store
         self.saved = saved

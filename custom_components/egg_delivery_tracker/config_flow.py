@@ -28,7 +28,7 @@ class EggDeliveryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title="Egg Delivery Tracker", data=user_input)
 
         schema = vol.Schema({
-            vol.Required(CONF_DELIVERY_DAY, default=3): vol.In(DAY_OPTIONS),
+            vol.Required(CONF_DELIVERY_DAY, default="Thursday"): vol.In(list(DAY_OPTIONS.keys())),
             vol.Required(CONF_INTERVAL, default=14): vol.All(vol.Coerce(int), vol.Range(min=1, max=365)),
             vol.Required(CONF_ANCHOR, default=dt_util.now().date().isoformat()): str,
             vol.Required(CONF_AUTO_CONFIRM, default=True): bool,
@@ -52,7 +52,7 @@ class EggDeliveryOptionsFlow(config_entries.OptionsFlow):
         current = {**DEFAULTS, **self.config_entry.data, **self.config_entry.options}
         day_name = next((k for k, v in DAY_OPTIONS.items() if v == current[CONF_DELIVERY_DAY]), "Thursday")
         schema = vol.Schema({
-            vol.Required(CONF_DELIVERY_DAY, default=day_name): vol.In(DAY_OPTIONS),
+            vol.Required(CONF_DELIVERY_DAY, default=day_name): vol.In(list(DAY_OPTIONS.keys())),
             vol.Required(CONF_INTERVAL, default=current[CONF_INTERVAL]): vol.All(vol.Coerce(int), vol.Range(min=1, max=365)),
             vol.Required(CONF_ANCHOR, default=str(current[CONF_ANCHOR] or dt_util.now().date().isoformat())): str,
             vol.Required(CONF_AUTO_CONFIRM, default=current[CONF_AUTO_CONFIRM]): bool,
