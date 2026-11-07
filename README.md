@@ -1,3 +1,10 @@
+## 0.1.1 bugfixes
+- Options flow updated to current Home Assistant config entry handling.
+- Fixed missing sensor constructors so all four sensors can be created.
+- Calendar now supplies a next event and uses date-based all-day events.
+- Entity names now include Egg (e.g. `calendar.egg_deliveries`, `binary_sensor.egg_delivery_today` for fresh installations). Home Assistant preserves existing entity IDs in the registry; rename existing IDs manually in Settings > Devices & services > Entities if needed.
+- Existing entry and saved delivery records are preserved when files are replaced.
+
 # Egg Delivery Tracker
 
 A HACS custom integration for managing recurring and special egg deliveries in Home Assistant.

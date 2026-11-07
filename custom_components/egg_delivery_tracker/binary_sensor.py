@@ -7,8 +7,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([EggDeliveryToday(hass.data[DOMAIN][entry.entry_id])])
 
 class EggDeliveryToday(CoordinatorEntity, BinarySensorEntity):
-    _attr_has_entity_name = True
-    _attr_name = "Delivery today"
+    _attr_has_entity_name = False
+    _attr_name = "Egg delivery today"
     _attr_icon = "mdi:egg"
     def __init__(self, coordinator):
         super().__init__(coordinator)

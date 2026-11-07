@@ -1,9 +1,9 @@
 {
   "domain": "egg_delivery_tracker",
   "name": "Egg Delivery Tracker",
-  "version": "0.1.0",
-  "documentation": "https://github.com/YOUR_GITHUB/ha-egg-delivery-tracker",
-  "issue_tracker": "https://github.com/YOUR_GITHUB/ha-egg-delivery-tracker/issues",
+  "version": "0.1.1",
+  "documentation": "https://github.com/lowe493/HassEgg",
+  "issue_tracker": "https://github.com/lowe493/HassEgg/issues",
   "codeowners": [],
   "config_flow": true,
   "iot_class": "local_push",

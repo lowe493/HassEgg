@@ -18,7 +18,10 @@ class EggBase(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.entry.entry_id}_{suffix}"
 
 class EggNextDelivery(EggBase):
-    _attr_name = "Next delivery"
+    _attr_name = "Egg next delivery"
+    _attr_has_entity_name = False
+    def __init__(self, coordinator):
+        super().__init__(coordinator, "next_delivery")
     _attr_icon = "mdi:egg"
     @property
     def native_value(self):
@@ -30,7 +33,8 @@ class EggNextDelivery(EggBase):
         return item or {}
 
 class EggDaysRemaining(EggBase):
-    _attr_name = "Days until delivery"
+    _attr_name = "Egg days until delivery"
+    _attr_has_entity_name = False
     _attr_native_unit_of_measurement = "days"
     _attr_icon = "mdi:calendar-clock"
     def __init__(self, coordinator):
@@ -42,7 +46,8 @@ class EggDaysRemaining(EggBase):
         return (date.fromisoformat(item["date"]) - dt_util.now().date()).days if item else None
 
 class EggLastDelivery(EggBase):
-    _attr_name = "Last delivery"
+    _attr_name = "Egg last delivery"
+    _attr_has_entity_name = False
     _attr_icon = "mdi:calendar-check"
     def __init__(self, coordinator):
         super().__init__(coordinator, "last_delivery")
@@ -53,7 +58,8 @@ class EggLastDelivery(EggBase):
         return delivered[0]["date"] if delivered else None
 
 class EggDeliveryType(EggBase):
-    _attr_name = "Next delivery type"
+    _attr_name = "Egg next delivery type"
+    _attr_has_entity_name = False
     _attr_icon = "mdi:tag"
     def __init__(self, coordinator):
         super().__init__(coordinator, "delivery_type")
