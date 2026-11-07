@@ -66,7 +66,13 @@ class EggDeliveryOptionsFlow(config_entries.OptionsFlow):
         return self.async_create_entry(data=dict(self.config_entry.options))
 
     async def async_step_init(self, user_input=None):
-        menu = ["settings", "additional", "replacement", "remove_special"]
+        # Explicit labels prevent blank rows if HA's translation cache is stale.
+        menu = {
+            "settings": "Regular schedule and confirmation",
+            "additional": "Add an extra delivery",
+            "replacement": "Replace a regular delivery",
+            "remove_special": "Remove a planned special delivery",
+        }
         return self.async_show_menu(step_id="init", menu_options=menu)
 
     async def async_step_settings(self, user_input=None):
