@@ -66,14 +66,36 @@ class EggDeliveryOptionsFlow(config_entries.OptionsFlow):
         return self.async_create_entry(data=dict(self.config_entry.options))
 
     async def async_step_init(self, user_input=None):
-        # Explicit labels prevent blank rows if HA's translation cache is stale.
-        menu = {
-            "settings": "Regular schedule and confirmation",
-            "additional": "Add an extra delivery",
-            "replacement": "Replace a regular delivery",
-            "remove_special": "Remove a planned special delivery",
-        }
-        return self.async_show_menu(step_id="init", menu_options=menu)
+        """Use a labelled selector instead of a translation-dependent menu.
+
+        Certain HA frontends render options-flow menu rows without their labels.
+        A SelectSelector gives each option an explicit visible label.
+        """
+        choices = [
+            {"value": "settings", "label": "Regular schedule and confirmation"},
+            {"value": "additional", "label": "Add an extra delivery"},
+            {"value": "replacement", "label": "Replace a regular delivery"},
+            {"value": "remove_special", "label": "Remove a planned special delivery"},
+        ]
+        if user_input is not None:
+            destination = user_input["action"]
+            if destination == "settings":
+                return await self.async_step_settings()
+            if destination == "additional":
+                return await self.async_step_additional()
+            if destination == "replacement":
+                return await self.async_step_replacement()
+            if destination == "remove_special":
+                return await self.async_step_remove_special()
+        schema = vol.Schema({
+            vol.Required("action"): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=choices,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            )
+        })
+        return self.async_show_form(step_id="init", data_schema=schema)
 
     async def async_step_settings(self, user_input=None):
         if user_input is not None:

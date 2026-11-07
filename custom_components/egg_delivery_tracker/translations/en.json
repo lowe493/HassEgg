@@ -17,12 +17,15 @@
   "options": {
     "step": {
       "init": {
-        "title": "Manage egg deliveries",
+        "title": "Choose what to configure",
         "menu_options": {
           "settings": "Regular schedule and confirmation",
           "additional": "Add an extra delivery",
           "replacement": "Replace a regular delivery",
           "remove_special": "Remove a planned special delivery"
+        },
+        "data": {
+          "action": "Configuration option"
         }
       },
       "settings": {
