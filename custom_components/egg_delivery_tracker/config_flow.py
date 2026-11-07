@@ -118,7 +118,7 @@ class EggDeliveryOptionsFlow(config_entries.OptionsFlow):
             fields[vol.Required("replaces_date")] = selector.SelectSelector(
                 selector.SelectSelectorConfig(options=originals, mode=selector.SelectSelectorMode.DROPDOWN)
             )
-        fields[vol.Required("date")] = selector.DateSelector()
+        fields[vol.Required("date", default=dt_util.now().date().isoformat())] = selector.DateSelector()
         fields[vol.Optional("delivery_time")] = selector.TimeSelector()
         fields[vol.Optional("description", default="Replacement egg delivery" if replacement else "Extra egg delivery")] = str
         fields[vol.Optional("skip_auto_confirmation", default=False)] = bool

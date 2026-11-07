@@ -1,68 +1,115 @@
-# Egg Delivery Tracker v0.1.2
+# Egg Delivery Tracker — v0.1.6
 
-Home Assistant custom integration for recurring egg deliveries, one-off deliveries and supplier date changes.
+A custom integration for **Home Assistant** that tracks your regular egg deliveries, extra deliveries, and one-off changes to your supplier's schedule. It provides a countdown, delivery calendar, delivery history, and automatic confirmation.
 
-## Install/update without losing your configuration
+> **Version 0.1.6** includes the special-delivery date-field fix. It builds on the v0.1.5 configuration dropdown and the v0.1.2 special-delivery and exact-time confirmation features. This is an early release; it has not been fully tested in a running Home Assistant instance.
 
-1. Make a Home Assistant backup before updating custom integrations.
-2. Extract this ZIP. Copy **`HassEgg/custom_components/egg_delivery_tracker`** over your existing **`/config/custom_components/egg_delivery_tracker`** directory.
-3. Restart Home Assistant. **Do not delete or re-add the existing integration**: your config entry and stored delivery history are retained.
+## Installation / updating
+
+1. **Back up Home Assistant** before updating a custom integration.
+2. Extract the ZIP and copy `HassEgg/custom_components/egg_delivery_tracker/` to `/config/custom_components/egg_delivery_tracker/`, replacing the existing files.
+3. **Restart Home Assistant** and refresh your dashboard/browser.
 4. Go to **Settings → Devices & services → Egg Delivery Tracker → Configure**.
 
-> This update has passed Python compilation and local schedule simulations but has not been tested inside a running Home Assistant instance. Please verify the new options screen and scheduler after installation.
+**Do not delete or re-add your existing integration during an update.** The update is designed to retain the existing config entry, stored deliveries, history, and entity unique IDs. If entity IDs were previously renamed by Home Assistant, the names may remain different from the examples below.
 
-## Configure menu
+## Configuration
 
-- **Regular schedule and confirmation**: weekday, interval (14 days by default), anchor date and exact-time automatic confirmation (23:59 by default).
-- **Add an extra delivery**: select an extra date, optional expected arrival time and description. This does not move your regular dates.
-- **Replace a regular delivery**: select the **original** delivery from a list, then set its replacement date and optional arrival time. With **Reset fortnightly cycle** turned off, later regular dates stay unchanged. With it on, subsequent normal deliveries repeat at the interval starting on the new date. Regular deliveries *before* the replacement remain unchanged.
-- **Remove a planned special delivery**: deletes an unconfirmed extra or replacement. Removing a replacement restores the original delivery and removes any cycle reset from that replacement.
+The **Configure** screen starts with an **Action** dropdown. Choose an option and continue:
 
-Example regular dates: 12 Nov, 26 Nov, 10 Dec.
-- **Extra on 19 Nov** → 12 Nov, **19 Nov**, 26 Nov, 10 Dec.
-- **Replace 26 Nov with 24 Nov, keep cycle** → 12 Nov, **24 Nov**, 10 Dec.
-- **Replace 26 Nov with 24 Nov, reset cycle** → 12 Nov, **24 Nov**, 8 Dec, 22 Dec.
+| Action | Purpose |
+| --- | --- |
+| **Regular schedule and confirmation** | Delivery weekday, interval in days (default **14**), anchor/next scheduled date, automatic confirmation toggle and local confirmation time (default **23:59**). |
+| **Add an extra delivery** | Choose an extra delivery date, optional expected arrival time and description, and whether to skip automatic confirmation for that delivery. Regular deliveries remain unchanged. |
+| **Replace a regular delivery** | Select the original regular delivery, choose its new date and optional arrival time, and optionally reset the recurring cycle. |
+| **Remove a planned special delivery** | Remove a pending extra or replacement delivery. For a replacement, this restores its original regular date and undoes any cycle reset associated with it. |
 
-**Arrival time** is optional calendar information only. It does not alter the automatic **confirmation time**, which is configured under Regular schedule and confirmation. A calendar event with an arrival time is shown as a 30-minute event; otherwise it is all-day.
+### Additional vs replacement deliveries
 
-## Automatic confirmations
+Suppose your regular deliveries are **12 Nov, 26 Nov, 10 Dec**:
 
-Home Assistant schedules a callback for the configured local confirmation time, instead of waiting for the five-minute coordinator check. The existing periodic update remains a fallback for unexpected scheduling delays and reloads. Manual confirmation, undo and per-delivery skip remain available. If Home Assistant was offline when the configured time passed, an unconfirmed delivery due **today** is automatically confirmed when Home Assistant starts again; past days are not automatically backfilled.
+- **Additional delivery on 19 Nov:** 12 Nov, **19 Nov**, 26 Nov, 10 Dec.
+- **Replace 26 Nov with 24 Nov; keep cycle:** 12 Nov, **24 Nov**, 10 Dec.
+- **Replace 26 Nov with 24 Nov; reset cycle:** 12 Nov, **24 Nov**, 8 Dec, 22 Dec.
 
-## Home Assistant entities
+The optional **delivery time** is an *expected arrival time shown in the calendar*; it is **not** the automatic confirmation time. Calendar events with an arrival time last 30 minutes; deliveries without an arrival time are displayed as all-day events.
 
-- `calendar.egg_deliveries`
-- `binary_sensor.egg_delivery_today`
-- `sensor.egg_next_delivery`
-- `sensor.egg_days_until_delivery`
-- `sensor.egg_last_delivery`
-- `sensor.egg_next_delivery_type`
+### Date fields in v0.1.6
 
-The actual IDs may differ if Home Assistant kept IDs previously assigned to the entities. The unique IDs have not changed.
+The **Add an extra delivery** and **Replace a regular delivery** forms now explicitly default their new-date field to the current local date in `YYYY-MM-DD` format. This fixes the **“Could not parse date”** error triggered when the form appeared to display today's date without actually having a valid date value. You can still pick a different date using the date selector.
 
-## Services/actions
+For replacement deliveries, choose the original regular delivery in the separate **Replaces date** dropdown as well.
+
+## Automatic delivery confirmation
+
+When enabled, the integration schedules confirmation at the configured **local time** (default 23:59) on a scheduled delivery date. The periodic coordinator refresh remains a fallback for delays/reloads. Manual confirmations, undo, and per-delivery skip-auto-confirmation remain supported. If Home Assistant was offline at the configured time, an unconfirmed delivery due **today** can be confirmed when it starts again; older days are not automatically backfilled.
+
+After a delivery is confirmed, the next scheduled delivery and countdown should advance. Test this behavior with a temporary date/time first and restore your normal schedule afterward.
+
+## Entities
+
+The integration exposes these kinds of entities (actual IDs depend on the Home Assistant entity registry):
+
+| Example entity ID | Meaning |
+| --- | --- |
+| `calendar.egg_deliveries` | Upcoming regular and special deliveries |
+| `binary_sensor.egg_delivery_today` | Whether a delivery is scheduled for today |
+| `sensor.egg_next_delivery` | Date of the next delivery |
+| `sensor.egg_days_until_delivery` | Days remaining until the next delivery |
+| `sensor.egg_last_delivery` | Most recently confirmed delivery |
+| `sensor.egg_next_delivery_type` | Type of the next delivery |
+
+## Actions / services
+
+The integration provides these services for advanced use:
 
 - `egg_delivery_tracker.log_delivery`
-- `egg_delivery_tracker.add_special_delivery` — `date` and `kind`; when `kind: replacement`, supply `replaces_date`, and optionally `reset_cycle` and `delivery_time`
-- `egg_delivery_tracker.remove_special_delivery` — `delivery_id`
-- `egg_delivery_tracker.undo_delivery` — `delivery_id`
-- `egg_delivery_tracker.skip_auto_confirmation` — `delivery_id`
-- `egg_delivery_tracker.set_next_delivery` — `date`
+- `egg_delivery_tracker.add_special_delivery` — use `date` and `kind`; replacements also require `replaces_date`, and may specify `reset_cycle` and `delivery_time`
+- `egg_delivery_tracker.remove_special_delivery` — use `delivery_id`
+- `egg_delivery_tracker.undo_delivery` — use `delivery_id`
+- `egg_delivery_tracker.skip_auto_confirmation` — use `delivery_id`
+- `egg_delivery_tracker.set_next_delivery` — use `date`
 
-For routine extra/replacement deliveries, use the **Configure** menu instead of writing service data. Scheduled regular delivery IDs use `normal-YYYY-MM-DD`.
+For routine special deliveries, use **Configure** rather than manually entering service data. Scheduled normal delivery IDs have the form `normal-YYYY-MM-DD`.
 
-## Important notes
+## Optional Lovelace card
 
-- One Home Assistant instance/config entry is supported by this release.
-- Removing a special delivery is only possible while it is pending; undo confirmation first if necessary.
-- The frontend `www/egg-delivery-card.js` is a separate experimental Lovelace card, not automatically installed as a HACS frontend card.
-- This is an early custom integration; please test it with your real schedule and check Home Assistant logs.
+`HassEgg/www/egg-delivery-card.js` is an **experimental** separate frontend card. It is **not automatically registered as a HACS frontend card**. The integration itself works without the card; the standard sensors and calendar can be used in regular Home Assistant dashboards.
 
-## v0.1.3: Configuration UI fix
+## Troubleshooting
 
-- Adds `custom_components/egg_delivery_tracker/translations/en.json` so Home Assistant renders options menu and form labels.
-- Uses Home Assistant date/time selectors in initial setup and regular settings rather than custom callable validators.
-- Changes weekday selection to a dropdown selector.
-- Does not modify the existing delivery Store data or entity unique IDs.
+**Configuration fields or menu options are blank**
 
-If the configuration menu is still blank after a full Home Assistant restart, refresh the browser cache. If any option errors, inspect Settings > System > Logs and capture the Python traceback.
+- v0.1.5+ uses a labelled **Action dropdown** in place of the earlier four-row menu.
+- Restart Home Assistant after copying new Python files and refresh your browser (hard refresh if necessary).
+- Check that the complete integration directory was replaced and that the installed `manifest.json` version is `0.1.6`.
+
+**“Could not parse date” on an extra or replacement delivery**
+
+- v0.1.6 provides an explicit default date. Check that v0.1.6 is installed and Home Assistant was restarted.
+- As a workaround, manually pick the date in the calendar field.
+
+**Configuration form fails or integration does not load**
+
+- Go to **Settings → System → Logs** and find the traceback mentioning `egg_delivery_tracker`.
+- Include the traceback and your Home Assistant version when reporting a bug: <https://github.com/lowe493/HassEgg/issues>.
+
+**Some entity IDs differ from the examples**
+
+- Home Assistant preserves existing entity IDs. Inspect **Developer Tools → States** for your actual names rather than deleting the integration.
+
+## Release notes
+
+- **v0.1.6:** Set valid local-date defaults for the extra and replacement delivery forms, fixing “Could not parse date” if the user leaves today preselected.
+- **v0.1.5:** Replace blank/translation-dependent option menu rows with a labelled Action dropdown.
+- **v0.1.4:** Attempt explicit menu-row labels (superseded by the v0.1.5 dropdown).
+- **v0.1.3:** Add `translations/en.json` and update Home Assistant selectors for regular settings and weekday selection.
+- **v0.1.2:** Add additional and replacement deliveries, optional cycle reset, optional arrival time, removal of pending specials, and exact-time automatic confirmation with periodic fallback.
+
+## Notes and limitations
+
+- Designed for a single configuration entry on a Home Assistant instance.
+- Only pending special deliveries can be removed directly. If already confirmed, undo their confirmation first.
+- This project is an early custom integration. Python syntax/package checks alone do not guarantee runtime compatibility with every Home Assistant release.
+
+Repository: <https://github.com/lowe493/HassEgg>
