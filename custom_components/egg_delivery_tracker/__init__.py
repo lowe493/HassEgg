@@ -13,7 +13,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DOMAIN, PLATFORMS, STORAGE_KEY, STORAGE_VERSION,
     SERVICE_LOG_DELIVERY, SERVICE_ADD_SPECIAL, SERVICE_UNDO_DELIVERY,
-    SERVICE_SKIP_AUTO, SERVICE_SET_NEXT,
+    SERVICE_SKIP_AUTO, SERVICE_SET_NEXT, SERVICE_REMOVE_SPECIAL,
 )
 from .coordinator import EggDeliveryCoordinator
 
@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await coordinator.async_start_scheduler()
 
     async def log_delivery(call: ServiceCall) -> None:
         await coordinator.async_log_delivery(
@@ -42,7 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             call.data.get("kind", "additional"),
             call.data.get("skip_auto_confirmation", False),
             call.data.get("reset_cycle", False),
+            replaces_date=call.data.get("replaces_date"),
+            delivery_time=call.data.get("delivery_time"),
         )
+
+    async def remove_special(call: ServiceCall) -> None:
+        await coordinator.async_remove_special(call.data["delivery_id"])
 
     async def undo_delivery(call: ServiceCall) -> None:
         await coordinator.async_undo_delivery(call.data["delivery_id"])
@@ -64,7 +70,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 vol.Optional("kind", default="additional"): vol.In(["additional", "replacement"]),
                 vol.Optional("skip_auto_confirmation", default=False): cv.boolean,
                 vol.Optional("reset_cycle", default=False): cv.boolean,
+                vol.Optional("replaces_date"): cv.date,
+                vol.Optional("delivery_time"): cv.string,
             }))
+        hass.services.async_register(DOMAIN, SERVICE_REMOVE_SPECIAL, remove_special,
+            schema=vol.Schema({vol.Required("delivery_id"): cv.string}))
         hass.services.async_register(DOMAIN, SERVICE_UNDO_DELIVERY, undo_delivery,
             schema=vol.Schema({vol.Required("delivery_id"): cv.string}))
         hass.services.async_register(DOMAIN, SERVICE_SKIP_AUTO, skip_auto,
@@ -77,7 +87,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator = hass.data[DOMAIN].pop(entry.entry_id, None)
+        if coordinator:
+            coordinator.async_stop_scheduler()
+        for service in (SERVICE_LOG_DELIVERY, SERVICE_ADD_SPECIAL, SERVICE_REMOVE_SPECIAL,
+                        SERVICE_UNDO_DELIVERY, SERVICE_SKIP_AUTO, SERVICE_SET_NEXT):
+            hass.services.async_remove(DOMAIN, service)
     return unload_ok
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

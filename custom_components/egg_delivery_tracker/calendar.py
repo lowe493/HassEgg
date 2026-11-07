@@ -1,10 +1,11 @@
-"""Upcoming egg delivery dates as an all-day calendar."""
+"""Upcoming egg deliveries shown on the Home Assistant calendar."""
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -25,9 +26,16 @@ class EggDeliveryCalendar(CoordinatorEntity, CalendarEntity):
     @staticmethod
     def _make_event(item):
         due = date.fromisoformat(item["date"])
+        arrival = item.get("delivery_time")
+        if arrival:
+            delivery_time = time.fromisoformat(arrival)
+            start = datetime.combine(due, delivery_time, tzinfo=dt_util.get_default_time_zone())
+            end = start + timedelta(minutes=30)
+        else:
+            start, end = due, due + timedelta(days=1)
         return CalendarEvent(
-            start=due,
-            end=due + timedelta(days=1),
+            start=start,
+            end=end,
             summary=item.get("description", "Egg delivery"),
             description=f"{item.get('kind', 'normal').title()} delivery · {item.get('status', 'pending')}",
         )
@@ -38,12 +46,14 @@ class EggDeliveryCalendar(CoordinatorEntity, CalendarEntity):
         return self._make_event(item) if item else None
 
     async def async_get_events(self, hass, start_date, end_date):
-        # An all-day CalendarEvent must have date values (not naive datetimes).
-        # An event overlaps when its end is after the lower bound and its
-        # start is before the upper bound.
-        return [
-            event
-            for item in self.coordinator.upcoming(100)
-            if (event := self._make_event(item)).end > start_date.date()
-            and event.start < end_date.date()
-        ]
+        events = []
+        for item in self.coordinator.upcoming(200):
+            event = self._make_event(item)
+            # Calendar query bounds are timezone-aware datetimes; convert timed
+            # events to this timezone, all-day events to date bounds.
+            if isinstance(event.start, datetime):
+                if event.end > start_date and event.start < end_date:
+                    events.append(event)
+            elif event.end > start_date.date() and event.start < end_date.date():
+                events.append(event)
+        return events

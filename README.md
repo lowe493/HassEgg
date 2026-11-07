@@ -1,59 +1,59 @@
-## 0.1.1 bugfixes
-- Options flow updated to current Home Assistant config entry handling.
-- Fixed missing sensor constructors so all four sensors can be created.
-- Calendar now supplies a next event and uses date-based all-day events.
-- Entity names now include Egg (e.g. `calendar.egg_deliveries`, `binary_sensor.egg_delivery_today` for fresh installations). Home Assistant preserves existing entity IDs in the registry; rename existing IDs manually in Settings > Devices & services > Entities if needed.
-- Existing entry and saved delivery records are preserved when files are replaced.
+# Egg Delivery Tracker v0.1.2
 
-# Egg Delivery Tracker
+Home Assistant custom integration for recurring egg deliveries, one-off deliveries and supplier date changes.
 
-A HACS custom integration for managing recurring and special egg deliveries in Home Assistant.
+## Install/update without losing your configuration
 
-## Current starter release
+1. Make a Home Assistant backup before updating custom integrations.
+2. Extract this ZIP. Copy **`HassEgg/custom_components/egg_delivery_tracker`** over your existing **`/config/custom_components/egg_delivery_tracker`** directory.
+3. Restart Home Assistant. **Do not delete or re-add the existing integration**: your config entry and stored delivery history are retained.
+4. Go to **Settings → Devices & services → Egg Delivery Tracker → Configure**.
 
-This repository is an initial working scaffold. It includes:
-- Configurable weekday, interval and anchor date.
-- Automatic confirmation at a configurable local time (default 23:59).
-- Special additional and replacement deliveries.
-- Optional per-delivery auto-confirm skip.
-- Manual log, undo and schedule services.
-- Sensors, a binary sensor and a calendar entity.
-- Persistent delivery data across restarts.
+> This update has passed Python compilation and local schedule simulations but has not been tested inside a running Home Assistant instance. Please verify the new options screen and scheduler after installation.
 
-## Install through HACS (custom repository)
+## Configure menu
 
-1. Copy this repository to a GitHub repository.
-2. In HACS, open **Integrations → ⋮ → Custom repositories**.
-3. Add the repository URL and choose **Integration**.
-4. Install **Egg Delivery Tracker** and restart Home Assistant.
-5. Go to **Settings → Devices & services → Add integration** and search for Egg Delivery Tracker.
+- **Regular schedule and confirmation**: weekday, interval (14 days by default), anchor date and exact-time automatic confirmation (23:59 by default).
+- **Add an extra delivery**: select an extra date, optional expected arrival time and description. This does not move your regular dates.
+- **Replace a regular delivery**: select the **original** delivery from a list, then set its replacement date and optional arrival time. With **Reset fortnightly cycle** turned off, later regular dates stay unchanged. With it on, subsequent normal deliveries repeat at the interval starting on the new date. Regular deliveries *before* the replacement remain unchanged.
+- **Remove a planned special delivery**: deletes an unconfirmed extra or replacement. Removing a replacement restores the original delivery and removes any cycle reset from that replacement.
 
-The Lovelace card is a separate frontend resource in `www/egg-delivery-card.js`. Copy it to `/config/www/egg-delivery-card.js`, add it as a JavaScript module resource (`/local/egg-delivery-card.js`), then add a manual card:
+Example regular dates: 12 Nov, 26 Nov, 10 Dec.
+- **Extra on 19 Nov** → 12 Nov, **19 Nov**, 26 Nov, 10 Dec.
+- **Replace 26 Nov with 24 Nov, keep cycle** → 12 Nov, **24 Nov**, 10 Dec.
+- **Replace 26 Nov with 24 Nov, reset cycle** → 12 Nov, **24 Nov**, 8 Dec, 22 Dec.
 
-```yaml
-type: custom:egg-delivery-card
-entity: sensor.egg_delivery_tracker_next_delivery
-```
+**Arrival time** is optional calendar information only. It does not alter the automatic **confirmation time**, which is configured under Regular schedule and confirmation. A calendar event with an arrival time is shown as a 30-minute event; otherwise it is all-day.
 
-## Services
+## Automatic confirmations
+
+Home Assistant schedules a callback for the configured local confirmation time, instead of waiting for the five-minute coordinator check. The existing periodic update remains a fallback for unexpected scheduling delays and reloads. Manual confirmation, undo and per-delivery skip remain available. If Home Assistant was offline when the configured time passed, an unconfirmed delivery due **today** is automatically confirmed when Home Assistant starts again; past days are not automatically backfilled.
+
+## Home Assistant entities
+
+- `calendar.egg_deliveries`
+- `binary_sensor.egg_delivery_today`
+- `sensor.egg_next_delivery`
+- `sensor.egg_days_until_delivery`
+- `sensor.egg_last_delivery`
+- `sensor.egg_next_delivery_type`
+
+The actual IDs may differ if Home Assistant kept IDs previously assigned to the entities. The unique IDs have not changed.
+
+## Services/actions
 
 - `egg_delivery_tracker.log_delivery`
-- `egg_delivery_tracker.add_special_delivery`
-- `egg_delivery_tracker.undo_delivery`
-- `egg_delivery_tracker.skip_auto_confirmation`
-- `egg_delivery_tracker.set_next_delivery`
+- `egg_delivery_tracker.add_special_delivery` — `date` and `kind`; when `kind: replacement`, supply `replaces_date`, and optionally `reset_cycle` and `delivery_time`
+- `egg_delivery_tracker.remove_special_delivery` — `delivery_id`
+- `egg_delivery_tracker.undo_delivery` — `delivery_id`
+- `egg_delivery_tracker.skip_auto_confirmation` — `delivery_id`
+- `egg_delivery_tracker.set_next_delivery` — `date`
 
-For a replacement delivery, `reset_cycle: false` preserves the recurring cycle; `true` starts a new cycle from the special date.
+For routine extra/replacement deliveries, use the **Configure** menu instead of writing service data. Scheduled regular delivery IDs use `normal-YYYY-MM-DD`.
 
-## Notes
+## Important notes
 
-This is an early 0.1.0 implementation intended for testing in a non-critical Home Assistant instance. Review the limitations below before relying on it:
-
-- The replacement workflow is intentionally conservative and should be tested against your supplier's exact rescheduling rules.
-- Service IDs for normal scheduled deliveries are generated from their date (`normal-YYYY-MM-DD`); use special delivery IDs from entity/calendar data for per-delivery skip and undo actions.
-- A production release should add automated tests, richer history management, translations, diagnostics, and a polished card editor.
-- The frontend card is a lightweight first version, not yet distributed as a separate HACS Lovelace plugin.
-
-## Development
-
-Python integration code lives in `custom_components/egg_delivery_tracker/`.
+- One Home Assistant instance/config entry is supported by this release.
+- Removing a special delivery is only possible while it is pending; undo confirmation first if necessary.
+- The frontend `www/egg-delivery-card.js` is a separate experimental Lovelace card, not automatically installed as a HACS frontend card.
+- This is an early custom integration; please test it with your real schedule and check Home Assistant logs.

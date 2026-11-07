@@ -32,6 +32,14 @@ add_special_delivery:
     skip_auto_confirmation:
       selector:
         boolean:
+    replaces_date:
+      description: Required for replacement; date of the original regular delivery.
+      selector:
+        date:
+    delivery_time:
+      description: Optional expected arrival time (HH:MM).
+      selector:
+        time:
     reset_cycle:
       description: Start the recurring cycle from this date.
       selector:
@@ -57,3 +65,11 @@ set_next_delivery:
       required: true
       selector:
         date:
+remove_special_delivery:
+  name: Remove special delivery
+  description: Remove a planned special delivery and restore a replaced regular delivery.
+  fields:
+    delivery_id:
+      required: true
+      selector:
+        text:
