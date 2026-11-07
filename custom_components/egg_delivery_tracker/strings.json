@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Egg Delivery Tracker",
+        "description": "Set your recurring delivery schedule and automatic confirmation.",
+        "data": {
+          "delivery_day": "Delivery weekday",
+          "interval_days": "Repeat interval (days)",
+          "anchor_date": "Next/anchor delivery date",
+          "auto_confirm": "Automatically confirm delivery",
+          "auto_confirm_time": "Automatic confirmation time (HH:MM)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Egg delivery settings",
+        "data": {
+          "delivery_day": "Delivery weekday",
+          "interval_days": "Repeat interval (days)",
+          "anchor_date": "Anchor delivery date",
+          "auto_confirm": "Automatically confirm delivery",
+          "auto_confirm_time": "Automatic confirmation time (HH:MM)"
+        }
+      }
+    }
+  }
+}

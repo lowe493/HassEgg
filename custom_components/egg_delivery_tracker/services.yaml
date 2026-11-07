@@ -1,0 +1,59 @@
+log_delivery:
+  name: Log delivery
+  description: Mark an egg delivery as received today or on a specified date.
+  fields:
+    date:
+      name: Date
+      description: Optional delivery date (YYYY-MM-DD).
+      selector:
+        date:
+    note:
+      name: Note
+      selector:
+        text:
+add_special_delivery:
+  name: Add special delivery
+  description: Add an additional or replacement delivery.
+  fields:
+    date:
+      required: true
+      selector:
+        date:
+    description:
+      selector:
+        text:
+    kind:
+      required: true
+      selector:
+        select:
+          options:
+            - additional
+            - replacement
+    skip_auto_confirmation:
+      selector:
+        boolean:
+    reset_cycle:
+      description: Start the recurring cycle from this date.
+      selector:
+        boolean:
+undo_delivery:
+  name: Undo delivery confirmation
+  fields:
+    delivery_id:
+      required: true
+      selector:
+        text:
+skip_auto_confirmation:
+  name: Skip automatic confirmation
+  fields:
+    delivery_id:
+      required: true
+      selector:
+        text:
+set_next_delivery:
+  name: Set next delivery date
+  fields:
+    date:
+      required: true
+      selector:
+        date:
