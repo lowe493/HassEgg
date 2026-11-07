@@ -1,0 +1,77 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Egg Delivery Tracker",
+        "description": "Set your recurring delivery schedule and automatic confirmation.",
+        "data": {
+          "delivery_day": "Delivery weekday",
+          "interval_days": "Repeat interval (days)",
+          "anchor_date": "Next/anchor delivery date",
+          "auto_confirm": "Automatically confirm delivery",
+          "auto_confirm_time": "Automatic confirmation time (HH:MM)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Manage egg deliveries",
+        "menu_options": {
+          "settings": "Regular schedule and confirmation",
+          "additional": "Add an extra delivery",
+          "replacement": "Replace a regular delivery",
+          "remove_special": "Remove a planned special delivery"
+        }
+      },
+      "settings": {
+        "title": "Regular schedule and confirmation",
+        "data": {
+          "delivery_day": "Delivery weekday",
+          "interval_days": "Repeat interval (days)",
+          "anchor_date": "Anchor delivery date",
+          "auto_confirm": "Automatically confirm delivery",
+          "auto_confirm_time": "Automatic confirmation time (HH:MM)"
+        }
+      },
+      "additional": {
+        "title": "Add an extra delivery",
+        "description": "Adds a delivery without changing your regular fortnightly schedule.",
+        "data": {
+          "date": "Extra delivery date",
+          "delivery_time": "Expected arrival time (optional)",
+          "description": "Description",
+          "skip_auto_confirmation": "Skip automatic confirmation"
+        }
+      },
+      "replacement": {
+        "title": "Replace a regular delivery",
+        "description": "Choose the original delivery, then its replacement date. Reset cycle starts the regular interval again from the replacement date.",
+        "data": {
+          "replaces_date": "Existing regular delivery to replace",
+          "date": "New delivery date",
+          "delivery_time": "Expected arrival time (optional)",
+          "description": "Description",
+          "skip_auto_confirmation": "Skip automatic confirmation",
+          "reset_cycle": "Reset fortnightly cycle from the new date"
+        }
+      },
+      "remove_special": {
+        "title": "Remove a planned special delivery",
+        "description": "Removing a replacement restores the original regular delivery.",
+        "data": {
+          "delivery_id": "Special delivery to remove"
+        }
+      }
+    },
+    "error": {
+      "invalid_replacement": "Cannot replace that delivery. Check it has not already been delivered or replaced.",
+      "invalid_special": "That special delivery is no longer available."
+    },
+    "abort": {
+      "no_regular_deliveries": "No upcoming regular deliveries are available to replace.",
+      "no_special_deliveries": "There are no pending special deliveries to remove."
+    }
+  }
+}

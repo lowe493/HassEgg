@@ -57,3 +57,12 @@ For routine extra/replacement deliveries, use the **Configure** menu instead of 
 - Removing a special delivery is only possible while it is pending; undo confirmation first if necessary.
 - The frontend `www/egg-delivery-card.js` is a separate experimental Lovelace card, not automatically installed as a HACS frontend card.
 - This is an early custom integration; please test it with your real schedule and check Home Assistant logs.
+
+## v0.1.3: Configuration UI fix
+
+- Adds `custom_components/egg_delivery_tracker/translations/en.json` so Home Assistant renders options menu and form labels.
+- Uses Home Assistant date/time selectors in initial setup and regular settings rather than custom callable validators.
+- Changes weekday selection to a dropdown selector.
+- Does not modify the existing delivery Store data or entity unique IDs.
+
+If the configuration menu is still blank after a full Home Assistant restart, refresh the browser cache. If any option errors, inspect Settings > System > Logs and capture the Python traceback.
